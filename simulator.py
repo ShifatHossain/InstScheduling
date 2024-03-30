@@ -44,6 +44,7 @@ def main():
     rf = [RegisterFile() for _ in range(100)]
 
     cycle_final = 0
+    str_v = ''
 
     head = rob[0]
     tail = head
@@ -85,7 +86,7 @@ def main():
         print("cannot open tracefile")
         return
 
-    outputname = "myoutput_256_8_gcc.txt"
+    outputname = "myoutput_{}_{}_gcc.txt".format(in_s,in_n)
     out = open(outputname, "w")
     if out is None:
         print("cannot open this out file")
@@ -104,7 +105,10 @@ def main():
         if clk_cycle == 196:
             pass  # Handle input
 
-        print(f"CYCLE={clk_cycle}, TAG={tag}")
+        print(f"CYCLE={clk_cycle}, TAG={tag}, PRINTEDNUM={printednum}")
+
+        if printednum == 9777:
+            print('This is it')
 
         # FakeRetire(); WB-> OUT
         temprob = head
@@ -121,13 +125,36 @@ def main():
                 temprob.valid = 0
                 temprob.wb_dur = 1
                 if temprob2.state == 6 and temprob2.tag == printednum and printednum < 10000:
-                    pass  # Print to output file
-                printednum += 1
-                temprob2 = temprob2.nextrob
+                    # pass  # Print to output file
+                    if temprob2.tag == 10053:
+                        str_v = input()
+                        print('STOP\n')
+                    
+                    out.write("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}\n".format(
+                        temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
+                        temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
+                        temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
+                        temprob2.wb_cycle, temprob2.wb_dur))
+
+                    if tag>9990:
+                        print("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}".format(
+                            temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
+                            temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
+                            temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
+                            temprob2.wb_cycle, temprob2.wb_dur))
+
+                    if cycle_final<temprob2.wb_cycle+temprob2.wb_dur:
+                        cycle_final = temprob2.wb_cycle+temprob2.wb_dur
+
+                    print('printed: {0} temprob2-tag: {1}\n'.format(printednum,temprob2.tag))
+                    printednum += 1
+                    temprob2 = temprob2.nextrob
             temprob = temprob.nextrob
 
         # Execute(); EX-> WB
-        for temprob in rob:
+        # for temprob in rob:
+        temprob = head
+        while temprob != tail:
             if not temprob.count_ex and temprob.state == 4:
                 temprob.list_execute = 0
                 temprob.state = 5
@@ -141,8 +168,12 @@ def main():
             elif temprob.state == 4:
                 temprob.count_ex -= 1
 
+            temprob = temprob.nextrob
+
         # Issue(); IS-> EX
-        for temprob in rob:
+        # for temprob in rob:
+        temprob = head
+        while temprob != tail:
             if (pipestate == 1 and count_FU and temprob.state == 3) or (pipestate == 0 and temprob.state == 3 and issue_rate):
                 if (rob[temprob.depend_entry1].oprand_state or temprob.src_state1) and (rob[temprob.depend_entry2].oprand_state or temprob.src_state2):
                     issue_rate -= 1
@@ -154,9 +185,12 @@ def main():
                     count_issue += 1
                     temprob.ex_cycle = clk_cycle
                     temprob.is_dur = temprob.ex_cycle - temprob.is_cycle
+            temprob = temprob.nextrob
 
         # Dispatch(); ID->IS
-        for temprob in rob:
+        # for temprob in rob:
+        temprob = head
+        while temprob != tail:
             if count_issue and temprob.state == 2:
                 count_issue -= 1
                 count_rob_id += 1
@@ -165,13 +199,18 @@ def main():
                 temprob.state = 3
                 temprob.is_cycle = clk_cycle
                 temprob.id_dur = temprob.is_cycle - temprob.id_cycle
+            temprob = temprob.nextrob
+
 
         # Fetch(); IF->ID
-        for temprob in rob:
+        # for temprob in rob:
+        temprob = head
+        while temprob != tail:
             if count_rob_id and temprob.state == 1:
                 temprob.list_dispatch = 1
                 count_rob += 1
                 temprob.state = 2
+            temprob = temprob.nextrob
 
         # IN -> IF
         while count_rob and count_rob_id:
@@ -202,17 +241,17 @@ def main():
             tail.state = 1
             tail.oprand_state = 0
 
-            if not rf[tail.src1].valid and tail.src1 != -1:
+            if (not rf[tail.src1].valid) and tail.src1 != -1:
                 tail.depend_entry1 = rf[tail.src1].tag
                 tail.src_state1 = 0
-            else:
+            elif rf[tail.src1].valid or tail.src1 == -1:
                 tail.src_state1 = 1
                 tail.depend_entry1 = tail.entry
 
-            if not rf[tail.src2].valid and tail.src2 != -1:
+            if (not rf[tail.src2].valid) and tail.src2 != -1:
                 tail.depend_entry2 = rf[tail.src2].tag
                 tail.src_state2 = 0
-            else:
+            elif rf[tail.src2].valid or tail.src2 == -1:
                 tail.src_state2 = 1
                 tail.depend_entry2 = tail.entry
 
@@ -226,10 +265,10 @@ def main():
     IPC = printednum / cycle_final
     print(f"number of instructions = {printednum}")
     print(f"number of cycles = {cycle_final}")
-    print(f"IPC = {IPC}")
+    print("IPC = {:1.5f}".format(IPC))
     out.write(f"number of instructions = {printednum}\n")
     out.write(f"number of cycles = {cycle_final}\n")
-    out.write(f"IPC = {IPC}\n")
+    out.write("IPC = {:1.5f}\n".format(IPC))
 
     out.close()
     tracefile.close()
