@@ -155,7 +155,7 @@ def main():
         # for temprob in rob:
         temprob = head
         while temprob != tail:
-            if not temprob.count_ex and temprob.state == 4:
+            if (not temprob.count_ex) and temprob.state == 4:
                 temprob.list_execute = 0
                 temprob.state = 5
                 count_FU += 1
