@@ -1,4 +1,5 @@
 import math
+import sys
 
 class MyROB:
     def __init__(self):
@@ -33,6 +34,19 @@ class MyROB:
         self.depend_entry2 = 0
         self.nextrob = None
         self.lastrob = None
+        self.this = id(self)
+
+    def __eq__(self, other): 
+        if not isinstance(other, MyROB):
+            return NotImplemented
+
+        return self.this == other.this
+    
+    def __ne__(self, other): 
+        if not isinstance(other, MyROB):
+            return NotImplemented
+
+        return self.this != other.this
 
 class RegisterFile:
     def __init__(self):
@@ -75,13 +89,18 @@ def main():
     count_rob = 0
     count_rob_id = 0
 
-    in_s = 256
-    in_n = 8
+    in_s = int(sys.argv[1]) #256
+    in_n = int(sys.argv[2]) #8
 
     pipestate = 0
 
-    tracename = "./traces/val_trace_gcc.txt"
+    tracename = sys.argv[3] #"./traces/val_trace_gcc.txt"
     tracefile = open(tracename, "r")
+    # tr_read = tracefile.readlines()
+    # tr_i = 0
+
+    rl_tmp = []
+
     if tracefile is None:
         print("cannot open tracefile")
         return
@@ -102,13 +121,8 @@ def main():
 
     while printednum < 10000:
         issue_rate = in_n + 1
-        if clk_cycle == 196:
-            pass  # Handle input
 
-        print(f"CYCLE={clk_cycle}, TAG={tag}, PRINTEDNUM={printednum}")
-
-        if printednum == 9777:
-            print('This is it')
+        # print(f"CYCLE={clk_cycle}, TAG={tag}, PRINTEDNUM={printednum}")
 
         # FakeRetire(); WB-> OUT
         temprob = head
@@ -136,17 +150,16 @@ def main():
                         temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
                         temprob2.wb_cycle, temprob2.wb_dur))
 
-                    if tag>9990:
-                        print("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}".format(
-                            temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
-                            temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
-                            temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
-                            temprob2.wb_cycle, temprob2.wb_dur))
+                    print("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}".format(
+                        temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
+                        temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
+                        temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
+                        temprob2.wb_cycle, temprob2.wb_dur))
 
                     if cycle_final<temprob2.wb_cycle+temprob2.wb_dur:
                         cycle_final = temprob2.wb_cycle+temprob2.wb_dur
 
-                    print('printed: {0} temprob2-tag: {1}\n'.format(printednum,temprob2.tag))
+                    # print('printed: {0} temprob2-tag: {1}\n'.format(printednum,temprob2.tag))
                     printednum += 1
                     temprob2 = temprob2.nextrob
             temprob = temprob.nextrob
@@ -155,7 +168,7 @@ def main():
         # for temprob in rob:
         temprob = head
         while temprob != tail:
-            if (not temprob.count_ex) and temprob.state == 4:
+            if (not (temprob.count_ex>0)) and temprob.state == 4:
                 temprob.list_execute = 0
                 temprob.state = 5
                 count_FU += 1
@@ -174,8 +187,8 @@ def main():
         # for temprob in rob:
         temprob = head
         while temprob != tail:
-            if (pipestate == 1 and count_FU and temprob.state == 3) or (pipestate == 0 and temprob.state == 3 and issue_rate):
-                if (rob[temprob.depend_entry1].oprand_state or temprob.src_state1) and (rob[temprob.depend_entry2].oprand_state or temprob.src_state2):
+            if (pipestate == 1 and count_FU>0 and temprob.state == 3) or (pipestate == 0 and temprob.state == 3 and issue_rate>0):
+                if (rob[temprob.depend_entry1].oprand_state>0 or temprob.src_state1>0) and (rob[temprob.depend_entry2].oprand_state>0 or temprob.src_state2>0):
                     issue_rate -= 1
                     count_FU -= 1
                     temprob.count_ex -= 1
@@ -191,7 +204,7 @@ def main():
         # for temprob in rob:
         temprob = head
         while temprob != tail:
-            if count_issue and temprob.state == 2:
+            if count_issue>0 and temprob.state == 2:
                 count_issue -= 1
                 count_rob_id += 1
                 temprob.list_dispatch = 0
@@ -206,21 +219,26 @@ def main():
         # for temprob in rob:
         temprob = head
         while temprob != tail:
-            if count_rob_id and temprob.state == 1:
+            if count_rob_id>0 and temprob.state == 1:
                 temprob.list_dispatch = 1
                 count_rob += 1
                 temprob.state = 2
             temprob = temprob.nextrob
 
         # IN -> IF
-        while count_rob and count_rob_id:
+        while count_rob>0 and count_rob_id>0:
             count_rob -= 1
             count_rob_id -= 1
+            # rltrf = tr_read[tr_i].split()
+            # tr_i += 1
             rltrf = tracefile.readline().split()
-            print(rltrf)
+            # print(rltrf)
 
             if len(rltrf) == 0:
-                break
+            #     break
+                rltrf = rl_tmp
+            else:
+                rl_tmp = rltrf
 
             seq_no = rltrf[0]
             op, dst, src1, src2 = map(int, rltrf[1:])
@@ -241,17 +259,17 @@ def main():
             tail.state = 1
             tail.oprand_state = 0
 
-            if (not rf[tail.src1].valid) and tail.src1 != -1:
+            if (not (rf[tail.src1].valid>0)) and tail.src1 != -1:
                 tail.depend_entry1 = rf[tail.src1].tag
                 tail.src_state1 = 0
-            elif rf[tail.src1].valid or tail.src1 == -1:
+            elif rf[tail.src1].valid>0 or tail.src1 == -1:
                 tail.src_state1 = 1
                 tail.depend_entry1 = tail.entry
 
-            if (not rf[tail.src2].valid) and tail.src2 != -1:
+            if (not (rf[tail.src2].valid>0)) and tail.src2 != -1:
                 tail.depend_entry2 = rf[tail.src2].tag
                 tail.src_state2 = 0
-            elif rf[tail.src2].valid or tail.src2 == -1:
+            elif rf[tail.src2].valid>0 or tail.src2 == -1:
                 tail.src_state2 = 1
                 tail.depend_entry2 = tail.entry
 
@@ -264,11 +282,11 @@ def main():
 
     IPC = printednum / cycle_final
     print(f"number of instructions = {printednum}")
-    print(f"number of cycles = {cycle_final}")
-    print("IPC = {:1.5f}".format(IPC))
+    print(f"number of cycles       = {cycle_final}")
+    print("IPC                    = {:1.5f}\n".format(IPC))
     out.write(f"number of instructions = {printednum}\n")
-    out.write(f"number of cycles = {cycle_final}\n")
-    out.write("IPC = {:1.5f}\n".format(IPC))
+    out.write(f"number of cycles       = {cycle_final}\n")
+    out.write("IPC                    = {:1.5f}\n".format(IPC))
 
     out.close()
     tracefile.close()
