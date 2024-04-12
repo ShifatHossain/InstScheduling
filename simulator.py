@@ -53,7 +53,7 @@ class RegisterFile:
         self.tag = 0
         self.valid = 0
 
-def main():
+def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
     rob = [MyROB() for _ in range(1024)]
     rf = [RegisterFile() for _ in range(100)]
 
@@ -89,13 +89,17 @@ def main():
     count_rob = 0
     count_rob_id = 0
 
-    in_s = int(sys.argv[1]) #256
-    in_n = int(sys.argv[2]) #8
+    if not ipcmode:
+        in_s = int(sys.argv[1]) #256
+        in_n = int(sys.argv[2]) #8
+        tracename = sys.argv[3] #"./traces/val_trace_gcc.txt"
 
     pipestate = 0
+    gcc_perl = tracename.split('_')[-1].split('.')[0]
 
-    tracename = sys.argv[3] #"./traces/val_trace_gcc.txt"
     tracefile = open(tracename, "r")
+
+
     # tr_read = tracefile.readlines()
     # tr_i = 0
 
@@ -105,11 +109,13 @@ def main():
         print("cannot open tracefile")
         return
 
-    outputname = "myoutput_{}_{}_gcc.txt".format(in_s,in_n)
-    out = open(outputname, "w")
-    if out is None:
-        print("cannot open this out file")
-        return
+    if not ipcmode:
+        outputname = "myoutput_{}_{}_{}.txt".format(in_s,in_n,gcc_perl)
+        out = open(outputname, "w")
+        if out is None:
+            print("cannot open this out file")
+            return
+        
 
     count_issue = in_s
     count_FU = in_n + 1
@@ -144,17 +150,18 @@ def main():
                         str_v = input()
                         print('STOP\n')
                     
-                    out.write("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}\n".format(
-                        temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
-                        temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
-                        temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
-                        temprob2.wb_cycle, temprob2.wb_dur))
+                    if not ipcmode:
+                        out.write("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}\n".format(
+                            temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
+                            temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
+                            temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
+                            temprob2.wb_cycle, temprob2.wb_dur))
 
-                    print("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}".format(
-                        temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
-                        temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
-                        temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
-                        temprob2.wb_cycle, temprob2.wb_dur))
+                        print("{0} fu{{{1}}} src{{{2},{3}}} dst{{{4}}} IF{{{5},{6}}} ID{{{7},{8}}} IS{{{9},{10}}} EX{{{11},{12}}} WB{{{13},{14}}}".format(
+                            temprob2.tag, temprob2.fu_type, temprob2.src1, temprob2.src2, temprob2.dst,
+                            temprob2.if_cycle, temprob2.if_dur, temprob2.id_cycle, temprob2.id_dur,
+                            temprob2.is_cycle, temprob2.is_dur, temprob2.ex_cycle, temprob2.ex_dur,
+                            temprob2.wb_cycle, temprob2.wb_dur))
 
                     if cycle_final<temprob2.wb_cycle+temprob2.wb_dur:
                         cycle_final = temprob2.wb_cycle+temprob2.wb_dur
@@ -281,14 +288,19 @@ def main():
         clk_cycle += 1
 
     IPC = printednum / cycle_final
-    print(f"number of instructions = {printednum}")
-    print(f"number of cycles       = {cycle_final}")
-    print("IPC                    = {:1.5f}\n".format(IPC))
-    out.write(f"number of instructions = {printednum}\n")
-    out.write(f"number of cycles       = {cycle_final}\n")
-    out.write("IPC                    = {:1.5f}\n".format(IPC))
+    if not ipcmode:
+        print(f"number of instructions = {printednum}")
+        print(f"number of cycles       = {cycle_final}")
+        print("IPC                    = {:1.5f}\n".format(IPC))
+        out.write(f"number of instructions = {printednum}\n")
+        out.write(f"number of cycles       = {cycle_final}\n")
+        out.write("IPC                    = {:1.5f}\n".format(IPC))
+    else:
+        return printednum,cycle_final,IPC
 
-    out.close()
+
+    if not ipcmode:
+        out.close()
     tracefile.close()
 
 if __name__ == "__main__":
