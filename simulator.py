@@ -55,7 +55,7 @@ class RegisterFile:
 
 def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
     rob = [MyROB() for _ in range(1024)]
-    rf = [RegisterFile() for _ in range(100)]
+    rf = [RegisterFile() for _ in range(1024)]
 
     cycle_final = 0
     str_v = ''
@@ -82,7 +82,7 @@ def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
         rob[i].entry = i
         rob[i].oprand_state = 1
 
-    for j in range(100):
+    for j in range(1024):
         rf[j].valid = 1
 
     clk_cycle = 0
@@ -110,7 +110,7 @@ def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
         return
 
     if not ipcmode:
-        outputname = "myoutput_{}_{}_{}.txt".format(in_s,in_n,gcc_perl)
+        outputname = "./outputs/myoutput_{}_{}_{}.txt".format(in_s,in_n,gcc_perl)
         out = open(outputname, "w")
         if out is None:
             print("cannot open this out file")
