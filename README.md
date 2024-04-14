@@ -19,4 +19,4 @@ Scheduler outputs are stored in "./scheduler_outputs" directory
 
 For each input file, the scheduler generates a prescheduled "_si" and post scheduled "_so" file in the output directory.
 
-The scheduler is adapted from ILOC local forward list instruction scheduler project (https://github.com/pilliq/scheduler/tree/master)
+The AoT scheduler is adapted from ILOC local forward list instruction scheduler project (https://github.com/pilliq/scheduler/tree/master)
