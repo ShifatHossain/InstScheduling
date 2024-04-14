@@ -3,13 +3,13 @@
 
 ## To run the simulator
 
-python ./simulator.py <s> <n> <trace file>
+python ./simulator.py <s> <n> <trace_file>
 
 Simulator outputs are stored in "./outputs" directory
 
 ## To run the scheduler
 
-python ./scheduler/scheduler_py -a/-b/-c <trace file>
+python ./scheduler/scheduler_py -a/-b/-c <trace_file>
 
 -a : LLWP heuristic
 -b : Highest Latency heuristic
