@@ -11,9 +11,9 @@ Simulator outputs are stored in "./outputs" directory
 
 python ./scheduler/scheduler_py -a/-b/-c <\trace_file>
 
--a : LLWP heuristic
--b : Highest Latency heuristic
--c : Random heuristic
+1. -a : LLWP heuristic
+2. -b : Highest Latency heuristic
+3. -c : Random heuristic
 
 Scheduler outputs are stored in "./scheduler_outputs" directory
 
