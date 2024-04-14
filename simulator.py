@@ -97,9 +97,14 @@ def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
     pipestate = 0
     gcc_perl = tracename.split('_')[-1].split('.')[0]
 
+    with open(tracename,'r') as f:
+        tmp_read = f.readlines()
+    max_pnum = len(tmp_read)
+    del tmp_read
+
     tracefile = open(tracename, "r")
 
-
+    
     # tr_read = tracefile.readlines()
     # tr_i = 0
 
@@ -125,7 +130,7 @@ def main(ipcmode=False,in_s=None,in_n=None,tracename=None):
     head.lastrob = None
     issue_rate = 0
 
-    while printednum < 10000:
+    while printednum < max_pnum: #10000
         issue_rate = in_n + 1
 
         # print(f"CYCLE={clk_cycle}, TAG={tag}, PRINTEDNUM={printednum}")

@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["8","8","./traces/val_trace_rnd0.txt"]
+            "args": ["-a","./traces/val_trace_gcc.txt"]
         }
     ]
 }
