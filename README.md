@@ -7,7 +7,7 @@ python ./simulator.py \<\s> <\n> <\trace_file>
 
 Simulator outputs are stored in "./outputs" directory
 
-## To run the scheduler
+## To run the AoT scheduler
 
 python ./scheduler/scheduler_py -a/-b/-c <\trace_file>
 
