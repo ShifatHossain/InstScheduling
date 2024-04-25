@@ -1,5 +1,7 @@
 # Instruction Scheduling project for CDA5106-Advanced Computer Architecture (UCF)
 
+Authors: M Shifat Hossain, Tasbiraha Athaya, Rony Chowdhury Ripan, M Iffat Hossain, Maruf Chowdhury, Fahimul Aleem
+
 
 ## Basic Tomasulo's simulator
 
