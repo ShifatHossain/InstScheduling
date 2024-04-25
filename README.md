@@ -2,6 +2,8 @@
 
 Authors: M Shifat Hossain, Tasbiraha Athaya, Rony Chowdhury Ripan, M Iffat Hossain, Maruf Chowdhury, Fahimul Aleem
 
+Report file: Ahead_of_Time__AOT__Instruction_Scheduling.pdf
+
 
 ## Basic Tomasulo's simulator
 
